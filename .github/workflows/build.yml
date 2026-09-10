@@ -1,0 +1,45 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Test package and build app
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Run RemarkableKit tests
+        run: swift test --package-path Packages/RemarkableKit
+
+      - name: Install XcodeGen and Pillow
+        run: |
+          brew install xcodegen
+          python3 -m pip install --quiet --break-system-packages pillow
+
+      - name: Generate app icons
+        run: python3 scripts/make-icons.py
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build app and share extension
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project SendToRemarkable.xcodeproj \
+            -scheme SendToRemarkable \
+            -configuration Debug \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build 2>&1 | grep -E "error:|warning: (unre|var|imm)|BUILD|Compiling|Ld " || true
+          test -d "build/Build/Products/Debug/Send to reMarkable.app/Contents/PlugIns/SendToRemarkableExtension.appex"
