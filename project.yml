@@ -1,0 +1,116 @@
+# XcodeGen project specification. Run `xcodegen generate` (or `make project`)
+# to produce SendToRemarkable.xcodeproj.
+name: SendToRemarkable
+
+options:
+  bundleIdPrefix: com.mcat
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    # Set DEVELOPMENT_TEAM in the environment before running xcodegen, or pick
+    # the team in Xcode's Signing & Capabilities tab after generating.
+    DEVELOPMENT_TEAM: "${DEVELOPMENT_TEAM}"
+    ENABLE_HARDENED_RUNTIME: YES
+    SWIFT_STRICT_CONCURRENCY: minimal
+
+packages:
+  RemarkableKit:
+    path: Packages/RemarkableKit
+
+targets:
+  SendToRemarkable:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+    dependencies:
+      - package: RemarkableKit
+      - target: SendToRemarkableExtension
+        embed: true
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Send to reMarkable
+        CFBundleName: Send to reMarkable
+        NSPrincipalClass: NSApplication
+        LSApplicationCategoryType: public.app-category.utilities
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        NSHumanReadableCopyright: MIT License
+        NSLocalNetworkUsageDescription: Used to send documents to a reMarkable connected over USB or Wi-Fi.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    entitlements:
+      path: App/SendToRemarkable.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+        com.apple.security.files.user-selected.read-write: true
+        com.apple.security.application-groups:
+          - $(TeamIdentifierPrefix)com.mcat.SendToRemarkable
+        # Keychain Sharing makes Xcode embed a provisioning profile, which the
+        # data-protection keychain needs on macOS; the group matches the app group.
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)com.mcat.SendToRemarkable
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mcat.SendToRemarkable
+        PRODUCT_NAME: Send to reMarkable
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+
+  SendToRemarkableExtension:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Extension
+    dependencies:
+      - package: RemarkableKit
+    info:
+      path: Extension/Info.plist
+      properties:
+        CFBundleDisplayName: Send to reMarkable
+        CFBundleName: Send to reMarkable
+        NSHumanReadableCopyright: MIT License
+        NSLocalNetworkUsageDescription: Used to send documents to a reMarkable connected over USB or Wi-Fi.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            # Offer the extension for NetNewsWire articles, links, HTML and text.
+            NSExtensionActivationRule: 'SUBQUERY(extensionItems, $extensionItem, SUBQUERY($extensionItem.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers == "com.ranchero.article" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.html" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.plain-text").@count > 0).@count > 0'
+    entitlements:
+      path: Extension/SendToRemarkableExtension.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+        com.apple.security.application-groups:
+          - $(TeamIdentifierPrefix)com.mcat.SendToRemarkable
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)com.mcat.SendToRemarkable
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mcat.SendToRemarkable.ShareExtension
+        PRODUCT_NAME: SendToRemarkableExtension
+        SKIP_INSTALL: YES
+
+schemes:
+  SendToRemarkable:
+    build:
+      targets:
+        SendToRemarkable: all
+        SendToRemarkableExtension: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - package: RemarkableKit/RemarkableKitTests
