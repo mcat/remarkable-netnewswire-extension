@@ -49,7 +49,12 @@ create the development certificate and register the app group. Without a
 team it builds unsigned, which is what CI does. A signed build is what makes
 the pairing shared between the app and the extension; an unsigned build keeps
 the token in the login keychain, where only the app can read it without a
-prompt.
+prompt. Both targets carry the App Groups and Keychain Sharing entitlements:
+on macOS the data-protection keychain also needs the application identifier
+that only an embedded provisioning profile provides, and Keychain Sharing is
+what makes Xcode embed one. If the first signed build stops with "Build input
+file cannot be found: ... .provisionprofile", the profile was created but not
+yet installed; run `make build` again.
 
 In Xcode select the **SendToRemarkable** scheme and **Product › Run**. The app
 window opens; the extension is embedded in the app bundle. macOS registers

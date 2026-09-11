@@ -55,6 +55,10 @@ targets:
         com.apple.security.files.user-selected.read-write: true
         com.apple.security.application-groups:
           - $(TeamIdentifierPrefix)com.mcat.SendToRemarkable
+        # Keychain Sharing makes Xcode embed a provisioning profile, which the
+        # data-protection keychain needs on macOS; the group matches the app group.
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)com.mcat.SendToRemarkable
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mcat.SendToRemarkable
@@ -90,6 +94,8 @@ targets:
         com.apple.security.network.client: true
         com.apple.security.application-groups:
           - $(TeamIdentifierPrefix)com.mcat.SendToRemarkable
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)com.mcat.SendToRemarkable
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mcat.SendToRemarkable.ShareExtension
