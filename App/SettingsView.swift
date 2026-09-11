@@ -57,15 +57,21 @@ struct SettingsView: View {
                             .font(.callout)
                             .foregroundStyle(.orange)
                     }
-                    HStack {
-                        TextField("One-time code", text: $model.pairingCode)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 160)
-                            .onSubmit { Task { await model.pair() } }
-                        Button("Pair") { Task { await model.pair() } }
-                            .keyboardShortcut(.defaultAction)
-                            .disabled(model.isBusy || model.pairingCode.trimmingCharacters(in: .whitespaces).count != 8)
-                        Button("Get a code…") { model.openPairingPage() }
+                    // A short label keeps the row on one line; the field's own
+                    // label is hidden so the form does not pull it out and
+                    // baseline-align the field apart from the buttons.
+                    LabeledContent("Code") {
+                        HStack(alignment: .center) {
+                            TextField("One-time code", text: $model.pairingCode, prompt: Text("8 characters"))
+                                .labelsHidden()
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 140)
+                                .onSubmit { Task { await model.pair() } }
+                            Button("Pair") { Task { await model.pair() } }
+                                .keyboardShortcut(.defaultAction)
+                                .disabled(model.isBusy || model.pairingCode.trimmingCharacters(in: .whitespaces).count != 8)
+                            Button("Get a code…") { model.openPairingPage() }
+                        }
                     }
                     Text("Sign in at my.remarkable.com, choose “Connect a device”, and enter the eight-character code here. The pairing is stored in your keychain and shared with the NetNewsWire share extension.")
                         .font(.callout)
