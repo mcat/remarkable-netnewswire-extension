@@ -42,10 +42,10 @@ public struct PDFRenderResult {
 /// Renders an ``ArticleDocument`` into a paginated PDF sized for the tablet.
 public enum PDFRenderer {
     public static func render(_ document: ArticleDocument, images: [URL: Data] = [:], options: PDFRenderOptions = PDFRenderOptions()) throws -> PDFRenderResult {
-        let pageWidth = options.pageSize.widthPoints
-        let pageHeight = options.pageSize.heightPoints
-        let margin = options.margin
-        let footerHeight = 18.0
+        let pageWidth = CGFloat(options.pageSize.widthPoints)
+        let pageHeight = CGFloat(options.pageSize.heightPoints)
+        let margin = CGFloat(options.margin)
+        let footerHeight: CGFloat = 18
         let contentSize = NSSize(width: pageWidth - 2 * margin, height: pageHeight - 2 * margin - footerHeight)
         guard contentSize.width > 50, contentSize.height > 50 else {
             throw PDFRenderError.layoutFailed
@@ -310,7 +310,7 @@ struct AttributedContentBuilder {
         for run in runs {
             var runFont = font
             if run.style.contains(.code) {
-                runFont = mono(font.pointSize / scale * 0.88)
+                runFont = mono(Double(font.pointSize) / scale * 0.88)
             } else if run.style.contains(.bold) || run.style.contains(.italic) {
                 runFont = applyTraits(font, bold: run.style.contains(.bold), italic: run.style.contains(.italic))
             }
@@ -333,8 +333,8 @@ struct AttributedContentBuilder {
         guard let prepared = ImageProcessing.prepare(data, maxPixelWidth: options.pageSize.pixelWidth, grayscale: options.grayscaleImages) else {
             return nil
         }
-        let maxWidth = contentSize.width
-        let maxHeight = contentSize.height * 0.62
+        let maxWidth = Double(contentSize.width)
+        let maxHeight = Double(contentSize.height) * 0.62
         let pixelWidth = Double(prepared.pixelWidth)
         let pixelHeight = Double(prepared.pixelHeight)
 
