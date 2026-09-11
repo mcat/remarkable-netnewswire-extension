@@ -13,6 +13,7 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .navigationTitle("Send to reMarkable")
+        .task { await model.refreshPairingState() }
     }
 
     // MARK: - Sections
@@ -28,15 +29,34 @@ struct SettingsView: View {
             if model.settings.transport == .cloud {
                 LabeledContent("Account") {
                     HStack {
-                        Image(systemName: model.isPaired ? "checkmark.circle.fill" : "xmark.circle")
-                            .foregroundStyle(model.isPaired ? Color.green : Color.secondary)
-                        Text(model.isPaired ? "Paired" : "Not paired")
+                        switch model.pairingState {
+                        case .checking:
+                            ProgressView().controlSize(.small)
+                            Text("Checking…")
+                        case .paired:
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.green)
+                            Text("Paired")
+                        case .notPaired:
+                            Image(systemName: "xmark.circle").foregroundStyle(Color.secondary)
+                            Text("Not paired")
+                        case .unavailable:
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Color.orange)
+                            Text("Keychain unavailable")
+                        }
                     }
                 }
-                if model.isPaired {
+                switch model.pairingState {
+                case .checking:
+                    EmptyView()
+                case .paired:
                     Button("Unpair this Mac", role: .destructive) { model.unpair() }
                         .disabled(model.isBusy)
-                } else {
+                case .notPaired, .unavailable:
+                    if case .unavailable(let reason) = model.pairingState {
+                        Text("\(reason) Relaunch and click Allow when macOS asks, or pair again below.")
+                            .font(.callout)
+                            .foregroundStyle(.orange)
+                    }
                     HStack {
                         TextField("One-time code", text: $model.pairingCode)
                             .textFieldStyle(.roundedBorder)

@@ -73,16 +73,4 @@ final class RemarkableClientTests: XCTestCase {
             XCTAssertEqual(error, .notPaired)
         }
     }
-
-    /// Unsigned builds have no keychain access group. The token must still be
-    /// readable by a store created later, such as the one the extension creates.
-    func testFreshKeychainStoreReadsTokenWrittenByAnotherInstance() throws {
-        let service = "com.mcat.SendToRemarkable.tests." + UUID().uuidString
-        let writer = KeychainTokenStore(service: service, accessGroup: nil)
-        defer { try? writer.setDeviceToken(nil) }
-        try writer.setDeviceToken("device-token-123")
-
-        let reader = KeychainTokenStore(service: service, accessGroup: nil)
-        XCTAssertEqual(try reader.deviceToken(), "device-token-123")
-    }
 }

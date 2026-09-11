@@ -78,7 +78,7 @@ final class ShareViewController: NSViewController {
             do {
                 let input = try await ShareInputReader.read(from: context)
                 let settings = SettingsStore().load()
-                let pipeline = SendPipeline(settings: settings, tokenStore: KeychainTokenStore())
+                let pipeline = SendPipeline(settings: settings, tokenStore: TokenStores.forCurrentProcess())
                 let result = try await pipeline.send(input) { progress in
                     Task { @MainActor in
                         self.show(progress)

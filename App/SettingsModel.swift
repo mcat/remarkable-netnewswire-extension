@@ -9,22 +9,32 @@ final class SettingsModel: ObservableObject {
     @Published var settings: SendSettings {
         didSet { store.save(settings) }
     }
-    @Published private(set) var isPaired: Bool
+    @Published private(set) var pairingState: PairingState = .checking
     @Published var pairingCode = ""
     @Published private(set) var isBusy = false
     @Published private(set) var statusMessage: String?
     @Published private(set) var statusIsError = false
 
     private let store = SettingsStore()
-    private let tokenStore: TokenStore = KeychainTokenStore()
+    private let tokenStore: TokenStore = TokenStores.forCurrentProcess()
     private let cloudClient = RemarkableCloudClient()
 
     init() {
         settings = store.load()
-        isPaired = ((try? KeychainTokenStore().deviceToken()) ?? nil) != nil
     }
 
     var appGroupIdentifier: String? { AppGroup.identifier }
+
+    var isPaired: Bool { pairingState == .paired }
+
+    /// Reads the keychain off the main thread, after the window is up, so a
+    /// keychain permission prompt never blocks the app from appearing.
+    func refreshPairingState() async {
+        let tokenStore = tokenStore
+        pairingState = await Task.detached(priority: .userInitiated) {
+            PairingState.resolve { try tokenStore.deviceToken() }
+        }.value
+    }
 
     func pair() async {
         guard let code = RemarkableCloudClient.normalizePairingCode(pairingCode) else {
@@ -37,7 +47,7 @@ final class SettingsModel: ObservableObject {
             let uploader = CloudUploader(client: cloudClient, store: tokenStore)
             try await uploader.pair(code: code)
             _ = try await uploader.validUserToken()
-            isPaired = true
+            pairingState = .paired
             pairingCode = ""
             setStatus("Paired with your reMarkable account.", isError: false)
         } catch {
@@ -48,7 +58,7 @@ final class SettingsModel: ObservableObject {
     func unpair() {
         do {
             try CloudUploader(client: cloudClient, store: tokenStore).unpair()
-            isPaired = false
+            pairingState = .notPaired
             setStatus("This Mac is no longer paired. You can also remove it under “Devices” on my.remarkable.com.", isError: false)
         } catch {
             setStatus("Could not remove the stored credentials: \(error.localizedDescription)", isError: true)
