@@ -10,6 +10,8 @@ headings, lists, quotes, code and **images**, laid out for the device's screen.
 NetNewsWire ─▶ Share menu ─▶ Send to reMarkable ─▶ PDF sized for the tablet ─▶ reMarkable cloud (or USB)
 ```
 
+<img src="docs/images/netnewswire-share-menu.png" width="700" alt="NetNewsWire's Share menu open on an article, with Send to reMarkable highlighted">
+
 The repository contains:
 
 | Path | What it is |
@@ -72,6 +74,8 @@ project generation).
    and sign in. reMarkable shows an eight-character one-time code.
 3. Paste the code into the app and click **Pair**.
 
+<img src="docs/images/settings-pairing.png" width="560" alt="The Send to reMarkable window before pairing, with the one-time code field, Pair and Get a code buttons">
+
 The device token reMarkable returns is stored in your keychain and is shared
 with the share extension. Nothing else is stored on any server other than
 reMarkable's own cloud. **Unpair this Mac** removes the token; you can also
@@ -129,6 +133,8 @@ that reliably delivers text *and* images and stays editable on the device.
 | Include images / grayscale | Whether to download images and whether to convert them to 8-bit gray. |
 | Text size | Scales every font from 80 % to 160 %. |
 | Prefix the document name | Names documents `site – Title` instead of `Title`. |
+
+<img src="docs/images/settings.png" width="560" alt="The Send to reMarkable settings window: connection paired, page size, image options, text size and the test buttons">
 
 **Save test PDF…** renders the built-in sample page to disk so you can check
 the layout without a tablet. **Send a test page** sends it to the tablet.
