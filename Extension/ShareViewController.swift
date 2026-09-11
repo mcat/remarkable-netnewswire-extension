@@ -72,20 +72,23 @@ final class ShareViewController: NSViewController {
         progressIndicator.startAnimation(nil)
 
         task = Task { [weak self] in
+            // Bind once: the progress closure runs off the main actor, and
+            // Swift 6 rejects reading a captured weak variable from there.
+            guard let self else { return }
             do {
                 let input = try await ShareInputReader.read(from: context)
                 let settings = SettingsStore().load()
                 let pipeline = SendPipeline(settings: settings, tokenStore: KeychainTokenStore())
                 let result = try await pipeline.send(input) { progress in
-                    Task { @MainActor [weak self] in
-                        self?.show(progress)
+                    Task { @MainActor in
+                        self.show(progress)
                     }
                 }
-                self?.finish(with: result)
+                self.finish(with: result)
             } catch is CancellationError {
                 return
             } catch {
-                self?.fail(with: error)
+                self.fail(with: error)
             }
         }
     }
