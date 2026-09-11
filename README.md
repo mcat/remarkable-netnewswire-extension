@@ -42,6 +42,15 @@ open SendToRemarkable.xcodeproj
 `App/Assets.xcassets/AppIcon.appiconset`) and then `xcodegen generate`. Both
 outputs are generated files and are not checked in.
 
+To build from the command line with the same team, put
+`DEVELOPMENT_TEAM=YOURTEAMID` in an untracked `local.mk` next to the Makefile.
+`make build` then signs the app and the extension, and lets `xcodebuild`
+create the development certificate and register the app group. Without a
+team it builds unsigned, which is what CI does. A signed build is what makes
+the pairing shared between the app and the extension; an unsigned build keeps
+the token in the login keychain, where only the app can read it without a
+prompt.
+
 In Xcode select the **SendToRemarkable** scheme and **Product › Run**. The app
 window opens; the extension is embedded in the app bundle. macOS registers
 Share extensions automatically for apps that live in `/Applications` or have
