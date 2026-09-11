@@ -18,12 +18,16 @@ public final class KeychainTokenStore: TokenStore {
 
     public let service: String
     public let accessGroup: String?
-    /// Whether to use the iOS-style keychain. Falls back automatically for unsigned builds.
-    private var useDataProtection = true
+    /// Whether to use the data-protection keychain. It needs an access group,
+    /// which only signed builds with an app group have; every other build uses
+    /// the login keychain. Reads there report "not found" rather than "missing
+    /// entitlement", so this cannot be decided lazily from the error code.
+    private var useDataProtection: Bool
 
     public init(service: String = "com.mcat.SendToRemarkable", accessGroup: String? = AppGroup.identifier) {
         self.service = service
         self.accessGroup = accessGroup
+        useDataProtection = accessGroup != nil
     }
 
     public func deviceToken() throws -> String? { try read(KeychainTokenStore.deviceAccount) }
